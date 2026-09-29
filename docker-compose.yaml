@@ -1,0 +1,55 @@
+services:
+  cat-registry-nginx:
+    container_name: cat-registry-nginx
+    image: nginx:stable-alpine
+    volumes:
+      - ./docker/nginx/docker.conf:/etc/nginx/conf.d/custom.conf
+      - ./:/app
+    ports:
+      - "7000:7000"
+    depends_on:
+      - cat-registry-php-fpm
+
+  cat-registry-php-fpm:
+    container_name: cat-registry-php-fpm
+    build:
+      context: .
+      dockerfile: docker/php/PHP_FPM
+    volumes:
+      - ./:/app
+    depends_on:
+      - cat-registry-postgres
+    restart: unless-stopped
+    environment:
+      PHP_IDE_CONFIG: "serverName=cat-registry"
+
+  cat-registry-frontend:
+    container_name: cat-registry-frontend
+    image: node:20-alpine
+    volumes:
+      - ./:/app
+    working_dir: /app/src/frontend
+    #command: npm start
+    tty: true
+    restart: unless-stopped
+
+  cat-registry-postgres:
+    container_name: cat-registry-postgres
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: "db"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
+    volumes:
+      - cat-registry_db_data:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  cat-registry_db_data:
+
+networks:
+  default:
+    external: true
+    name: cat-registry-network
