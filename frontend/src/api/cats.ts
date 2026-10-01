@@ -1,33 +1,79 @@
 import { http } from './http'
 import type {
   Cat,
-  CatPayload,
-  CatFilters,
+  CatListQuery,
   CatListResponse,
+  CatPayload,
 } from '@/types/cat'
 
+function toQueryParams(q: CatListQuery): Record<string, unknown> {
+  const params: Record<string, unknown> = {}
+
+  if (q.page !== undefined) params.page = q.page
+  if (q.limit !== undefined) params.limit = q.limit
+  if (q.gender) params.gender = q.gender
+
+  if (q.age_range) {
+    const [min, max] = q.age_range
+    params.age_range = `${min},${max}`
+  }
+
+  return params
+}
+
+export interface CatSearchQuery {
+  name: string
+  gender: 'male' | 'female'
+  exclude_cat_id: number
+}
+
+export interface CatSearchResponse {
+  items: Pick<Cat, 'id' | 'name' | 'gender' | 'age'>[]
+}
+
 export const catsApi = {
-  async list(params: CatFilters & { page?: number; per_page?: number } = {}) {
-    const { data } = await http.get<CatListResponse>('/cats', { params })
+  async list(query: CatListQuery = {}): Promise<CatListResponse> {
+    const { data } = await http.get<CatListResponse>('/cats', {
+      params: toQueryParams(query),
+    })
     return data
   },
 
-  async get(id: number) {
-    const { data } = await http.get<Cat>(`/cat/${id}`)
+  async get(id: number): Promise<Cat> {
+    const { data } = await http.get<Cat | Cat[]>(`/cat/${id}`)
+
+    // Бэк может отдать как объект, так и массив из одного элемента
+    const cat = Array.isArray(data) ? data[0] : data
+
+    if (!cat) {
+      throw new Error(`Кошка #${id} не найдена`)
+    }
+
+    return cat
+  },
+
+  async search(query: CatSearchQuery): Promise<CatSearchResponse> {
+    const { data } = await http.get<CatSearchResponse>('/cats/search', {
+      params: {
+        name: query.name,
+        gender: query.gender,
+        exclude_cat_id: query.exclude_cat_id,
+      },
+    })
     return data
   },
 
-  async create(payload: CatPayload) {
+  async create(payload: CatPayload): Promise<Cat> {
     const { data } = await http.post<Cat>('/cats', payload)
     return data
   },
 
-  async update(id: number, payload: Partial<CatPayload>) {
+  async update(id: number, payload: Partial<CatPayload>): Promise<Cat> {
     const { data } = await http.put<Cat>(`/cats/${id}`, payload)
     return data
   },
 
-  async remove(id: number) {
+  async remove(id: number): Promise<void> {
     await http.delete(`/cats/${id}`)
   },
 }

@@ -1,14 +1,10 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    vueDevTools(),
   ],
   resolve: {
     alias: {
@@ -17,10 +13,23 @@ export default defineConfig({
   },
   server: {
     port: 8088,
-    host: true,
     strictPort: true,
+    host: '0.0.0.0',
+    hmr: false,
+    proxy: {
+      '/api': {
+        target: 'http://cat-registry-nginx:7000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+    watch: {
+      usePolling: true,
+    },
   },
   preview: {
     port: 8088,
+    strictPort: true,
+    host: true,
   },
 })

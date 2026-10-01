@@ -4,27 +4,33 @@ import { useRouter } from 'vue-router'
 import { catsApi } from '@/api/cats'
 import type { Cat, CatPayload } from '@/types/cat'
 import CatForm from '@/components/CatForm.vue'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
+const notifications = useNotificationsStore()
 
 const cat = ref<Cat | null>(null)
 const loading = ref(true)
-const error = ref<string | null>(null)
 
 onMounted(async () => {
   try {
     cat.value = await catsApi.get(Number(props.id))
-  } catch (e: any) {
-    error.value = e.message
+  } catch {
+    // Ошибку уже показал интерцептор
   } finally {
     loading.value = false
   }
 })
 
 async function onSubmit(payload: CatPayload) {
-  await catsApi.update(Number(props.id), payload)
-  router.push({ name: 'cats-detail', params: { id: props.id } })
+  try {
+    await catsApi.update(Number(props.id), payload)
+    notifications.success('Изменения сохранены')
+    router.push({ name: 'cats-detail', params: { id: props.id } })
+  } catch {
+    // Ошибку уже показал интерцептор
+  }
 }
 </script>
 
@@ -35,9 +41,8 @@ async function onSubmit(payload: CatPayload) {
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border"></div>
     </div>
-    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
     <CatForm
-      v-else
+      v-else-if="cat"
       :initial="cat"
       submit-label="Сохранить"
       @submit="onSubmit"

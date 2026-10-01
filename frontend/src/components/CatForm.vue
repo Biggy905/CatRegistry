@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { reactive, ref, watch, onMounted } from 'vue'
+import { reactive, ref, watch } from 'vue'
+import VueSelect from '@ttbooking/vue-select'
+import '@ttbooking/vue-select/style.css'
 import { catsApi } from '@/api/cats'
-import type { Cat, CatGender, CatPayload } from '@/types/cat'
+import type { Cat, CatPayload } from '@/types/cat'
+import { debounce } from 'lodash-es'
 
 const props = defineProps<{
   initial?: Cat | null
@@ -21,34 +24,82 @@ const form = reactive<CatPayload>({
   father_ids: [],
 })
 
-const mothers = ref<Cat[]>([])
-const fathers = ref<Cat[]>([])
 const errors = ref<string | null>(null)
 
+// Опции для селектов
+const motherOptions = ref<{ id: number; text: string }[]>([])
+const fatherOptions = ref<{ id: number; text: string }[]>([])
+const mothersLoading = ref(false)
+const fathersLoading = ref(false)
+
+// Заполняем форму при редактировании
 watch(
   () => props.initial,
   (cat) => {
     if (!cat) return
+
     form.name = cat.name
     form.gender = cat.gender
     form.age = cat.age
-    form.mother_id = cat.mother_id
-    form.father_ids = cat.father_ids ?? []
+
+    // mother — объект или null
+    form.mother_id = cat.mother?.id ?? null
+
+    // fathers может быть null — приводим к массиву
+    const fathers = cat.fathers ?? []
+    form.father_ids = fathers.map((f) => f.id)
+
+    // Предзаполняем options
+    motherOptions.value = cat.mother
+      ? [{ id: cat.mother.id, text: cat.mother.name }]
+      : []
+
+    fatherOptions.value = fathers.map((f) => ({ id: f.id, text: f.name }))
   },
   { immediate: true },
 )
 
-onMounted(async () => {
-  // Тянем всех кошек, чтобы выбрать родителей.
-  // Если у API есть фильтр по полу — используйте его.
+// Асинхронный поиск матерей
+const searchMothers = debounce(async (search: string) => {
+  mothersLoading.value = true
   try {
-    const data = await catsApi.list({ per_page: 1000 })
-    mothers.value = data.items.filter((c) => c.gender === 'female')
-    fathers.value = data.items.filter((c) => c.gender === 'male')
+    const data = await catsApi.search({
+      name: search,
+      gender: 'female',
+      exclude_cat_id: props.initial?.id ?? 0,
+    })
+    motherOptions.value = data.items.map((c) => ({ id: c.id, text: c.name }))
   } catch {
-    // молча — родители необязательны
+    motherOptions.value = []
+  } finally {
+    mothersLoading.value = false
   }
-})
+}, 300)
+
+// Асинхронный поиск отцов
+const searchFathers = debounce(async (search: string) => {
+  fathersLoading.value = true
+  try {
+    const data = await catsApi.search({
+      name: search,
+      gender: 'male',
+      exclude_cat_id: props.initial?.id ?? 0,
+    })
+    fatherOptions.value = data.items.map((c) => ({ id: c.id, text: c.name }))
+  } catch {
+    fatherOptions.value = []
+  } finally {
+    fathersLoading.value = false
+  }
+}, 300)
+
+// При открытии дропдауна грузим начальный список (пустой запрос)
+function onMotherSearchOpen() {
+  if (!motherOptions.value.length) searchMothers('')
+}
+function onFatherSearchOpen() {
+  if (!fatherOptions.value.length) searchFathers('')
+}
 
 function submit() {
   errors.value = null
@@ -82,20 +133,34 @@ function submit() {
       <input v-model.number="form.age" type="number" min="1" max="30" class="form-control" />
     </div>
 
+    <!-- Мать -->
     <div class="col-md-6">
       <label class="form-label">Мать</label>
-      <select v-model="form.mother_id" class="form-select">
-        <option :value="null">— не указана —</option>
-        <option v-for="m in mothers" :key="m.id" :value="m.id">{{ m.name }}</option>
-      </select>
+      <VueSelect
+        v-model="form.mother_id"
+        :options="motherOptions"
+        :loading="mothersLoading"
+        lang="ru"
+        placeholder="Начните вводить кличку..."
+        :allow-clear="true"
+        @search="searchMothers"
+        @open="onMotherSearchOpen"
+      />
     </div>
 
+    <!-- Отцы -->
     <div class="col-md-6">
       <label class="form-label">Отцы (можно несколько)</label>
-      <select v-model="form.father_ids" class="form-select" multiple size="4">
-        <option v-for="f in fathers" :key="f.id" :value="f.id">{{ f.name }}</option>
-      </select>
-      <div class="form-text">Ctrl/Cmd — выбрать несколько</div>
+      <VueSelect
+        v-model="form.father_ids"
+        :options="fatherOptions"
+        :loading="fathersLoading"
+        :multiple="true"
+        lang="ru"
+        placeholder="Начните вводить клички..."
+        @search="searchFathers"
+        @open="onFatherSearchOpen"
+      />
     </div>
 
     <div class="col-12 d-flex gap-2">

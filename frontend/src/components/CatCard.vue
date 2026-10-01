@@ -10,8 +10,8 @@ defineProps<{ cat: Cat }>()
     <div class="card-body d-flex flex-column">
       <h5 class="card-title mb-1">{{ cat.name }}</h5>
       <p class="text-muted small mb-2">
-        {{ cat.gender === 'female' ? '♀ Кошка' : '♂ Кот' }}
-        • {{ cat.age }} {{ plural(cat.age, 'год', 'года', 'лет') }}
+        {{ cat.gender === 'female' ? 'Кошка' : 'Кот' }}
+        , {{ cat.age }} {{ plural(cat.age, 'год', 'года', 'лет') }}
       </p>
       <div class="mt-auto d-flex gap-2">
         <RouterLink

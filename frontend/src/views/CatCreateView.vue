@@ -3,12 +3,19 @@ import { useRouter } from 'vue-router'
 import { catsApi } from '@/api/cats'
 import type { CatPayload } from '@/types/cat'
 import CatForm from '@/components/CatForm.vue'
+import { useNotificationsStore } from '@/stores/notifications'
 
 const router = useRouter()
+const notifications = useNotificationsStore()
 
 async function onSubmit(payload: CatPayload) {
-  const cat = await catsApi.create(payload)
-  router.push({ name: 'cats-detail', params: { id: cat.id } })
+  try {
+    const cat = await catsApi.create(payload)
+    notifications.success(`Кошка «${cat.name}» создана`)
+    router.push({ name: 'cats-detail', params: { id: cat.id } })
+  } catch {
+    // Ошибку уже показал интерцептор
+  }
 }
 </script>
 

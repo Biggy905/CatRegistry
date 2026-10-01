@@ -5,21 +5,15 @@ import { RouterLink } from 'vue-router'
 import { useCatsStore } from '@/stores/cats'
 import CatCard from '@/components/CatCard.vue'
 import CatPagination from '@/components/CatPagination.vue'
+import CatFiltersBar from '@/components/CatFilters.vue'
 
 const store = useCatsStore()
-const { items, total, page, perPage, loading, error, filters } = storeToRefs(store)
+const { items, total, page, limit, loading, filters } = storeToRefs(store)
 
 onMounted(() => store.fetchList())
 
 watch(page, () => store.fetchList())
-watch(
-  () => ({ ...filters.value }),
-  () => {
-    page.value = 1
-    store.fetchList()
-  },
-  { deep: true },
-)
+watch(limit, () => store.fetchList())
 </script>
 
 <template>
@@ -31,40 +25,21 @@ watch(
       </RouterLink>
     </div>
 
-    <div class="card mb-3">
-      <div class="card-body row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Пол</label>
-          <select v-model="filters.gender" class="form-select">
-            <option :value="null">Все</option>
-            <option value="female">Кошки</option>
-            <option value="male">Коты</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Возраст от</label>
-          <input v-model.number="filters.age_from" type="number" min="0" class="form-control" />
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Возраст до</label>
-          <input v-model.number="filters.age_to" type="number" min="0" class="form-control" />
-        </div>
-        <div class="col-md-3 d-flex align-items-end">
-          <button class="btn btn-outline-secondary w-100" @click="store.resetFilters()">
-            Сбросить
-          </button>
-        </div>
-      </div>
-    </div>
+    <CatFiltersBar
+      v-model="filters"
+      @apply="store.applyFilters()"
+      @reset="store.resetFilters()"
+    />
 
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border" role="status"></div>
     </div>
 
-    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
-
-    <div v-else-if="!items.length" class="alert alert-info">
-      Ничего не найдено.
+    <div v-else-if="!items.length" class="alert alert-info d-flex justify-content-between align-items-center">
+      <span>Ничего не найдено.</span>
+      <RouterLink :to="{ name: 'cats-create' }" class="btn btn-sm btn-primary">
+        Добавить первую
+      </RouterLink>
     </div>
 
     <div v-else class="row g-3">
@@ -74,9 +49,11 @@ watch(
     </div>
 
     <CatPagination
-      v-model:page="page"
-      :per-page="perPage"
+      :page="page"
+      :limit="limit"
       :total="total"
+      @update:page="store.setPage($event)"
+      @update:limit="store.setLimit($event)"
     />
   </div>
 </template>
