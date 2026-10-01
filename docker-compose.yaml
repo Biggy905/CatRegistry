@@ -7,6 +7,7 @@ services:
       - ./:/app
     ports:
       - "7000:7000"
+      - "7010:8088"
     depends_on:
       - cat-registry-php-fpm
 
@@ -25,11 +26,11 @@ services:
 
   cat-registry-frontend:
     container_name: cat-registry-frontend
-    image: node:20-alpine
+    image: node:22-alpine
     volumes:
       - ./:/app
-    working_dir: /app/src/frontend
-    #command: npm start
+    working_dir: /app/frontend
+    command: npm run dev
     tty: true
     restart: unless-stopped
 
