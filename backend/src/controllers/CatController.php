@@ -7,8 +7,10 @@ use CatRegistry\applications\exceptions\BadRequestHttpException;
 use CatRegistry\applications\forms\CreateCatForm;
 use CatRegistry\applications\forms\FilterCatForm;
 use CatRegistry\applications\forms\IdCatForm;
+use CatRegistry\applications\forms\SearchCatForm;
 use CatRegistry\applications\forms\UpdateCatForm;
 use CatRegistry\applications\services\CatRegistryServices;
+use Yii;
 
 final class CatController extends RestController
 {
@@ -16,6 +18,7 @@ final class CatController extends RestController
         $id,
         $module,
         private readonly IdCatForm $idCatForm,
+        private readonly SearchCatForm $searchCatForm,
         private readonly FilterCatForm $filterCatForm,
         private readonly CreateCatForm $createCatForm,
         private readonly UpdateCatForm $updateCatForm,
@@ -27,9 +30,8 @@ final class CatController extends RestController
 
     public function actionItem(int $id): array
     {
-        $payload = $this->getPayload();
         $form = $this->idCatForm;
-        if (!$form->runValidate($payload)) {
+        if (!$form->runValidate(['id' => $id])) {
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
@@ -38,11 +40,31 @@ final class CatController extends RestController
         );
     }
 
+    public function actionSearch(int $exclude_cat_id, string $name, string $gender): array
+    {
+        $form = $this->searchCatForm;
+        if (!$form->runValidate(
+            ['exclude_cat_id' => $exclude_cat_id,'name' => $name, 'gender' => $gender])
+        ) {
+            throw new BadRequestHttpException(null, $form->getErrors());
+        }
+
+        return $this->response(
+            $this->services->search($form),
+        );
+    }
+
     public function actionList(): array
     {
-        $payload = $this->getPayload();
         $form = $this->filterCatForm;
-        if (!$form->runValidate($payload)) {
+        if (!$form->runValidate(
+            [
+                'page' => Yii::$app->request->get('page'),
+                'limit' => Yii::$app->request->get('limit'),
+                'age' => Yii::$app->request->get('age'),
+                'gender' => Yii::$app->request->get('gender'),
+            ]
+        )) {
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
@@ -59,9 +81,9 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
-            $this->services->insert($form),
-        );
+        $this->services->insert($form);
+
+        return $this->response();
     }
 
     public function actionUpdate(int $id): array
@@ -74,9 +96,9 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
-            $this->services->update($form),
-        );
+        $this->services->update($form);
+
+        return $this->response();
     }
 
     public function actionDelete(int $id): array
@@ -86,8 +108,8 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
-            $this->services->delete($form),
-        );
+        $this->services->delete($form);
+
+        return $this->response();
     }
 }

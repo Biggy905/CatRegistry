@@ -4,7 +4,7 @@ namespace CatRegistry\applications\forms;
 
 use CatRegistry\applications\components\AbstractForm;
 use CatRegistry\applications\enums\CatGenderEnums;
-use CatRegistry\applications\repositories\databases\CatRegistryRepository;
+use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
 use yii\web\NotFoundHttpException;
 
 final class CreateCatForm extends AbstractForm
@@ -16,7 +16,7 @@ final class CreateCatForm extends AbstractForm
     public $father_ids;
 
     public function __construct(
-        private readonly CatRegistryRepository $catRegistryRepository,
+        private readonly CatRegistryRepositoryInterface $catRegistryRepository,
         $config = [],
     ) {
         parent::__construct($config);
@@ -51,7 +51,7 @@ final class CreateCatForm extends AbstractForm
             [
                 'gender',
                 'in',
-                'range' => CatGenderEnums::cases(),
+                'range' => CatGenderEnums::toArray(),
                 'message' => 'Пол должен быть одним из: мужского или женского.',
             ],
             [

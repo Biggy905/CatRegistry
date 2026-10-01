@@ -7,6 +7,8 @@ use CatRegistry\applications\enums\CatGenderEnums;
 
 final class FilterCatForm extends AbstractForm
 {
+    public $page;
+    public $limit;
     public $age;
     public $gender;
 
@@ -14,8 +16,12 @@ final class FilterCatForm extends AbstractForm
     {
         return [
             [
-                'age',
+                ['page', 'limit'],
                 'integer',
+            ],
+            [
+                'age',
+                'validateAge',
             ],
             [
                 'gender',
@@ -24,8 +30,13 @@ final class FilterCatForm extends AbstractForm
             [
                 'gender',
                 'in',
-                'range' => CatGenderEnums::cases(),
+                'range' => CatGenderEnums::toArray(),
             ],
         ];
+    }
+
+    public function validateAge()
+    {
+
     }
 }

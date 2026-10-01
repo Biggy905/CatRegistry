@@ -22,6 +22,11 @@ return [
         'route' => 'cat/list',
     ],
     [
+        'verb' => ['get'],
+        'pattern' => '/cats/search',
+        'route' => 'cat/search',
+    ],
+    [
         'verb' => ['post'],
         'pattern' => '/cats',
         'route' => 'cat/create',

@@ -15,8 +15,8 @@ use CatRegistry\applications\queries\CatRegistryQuery;
  * @property string $updated_at
  * @property string $deleted_at
  *
- * @property-read \yii\db\ActiveQuery $mother
- * @property-read array<\yii\db\ActiveQuery> $fathers
+ * @property-read CatRegistry $mother
+ * @property-read array<CatRegistry> $fathers
  */
 final class CatRegistry extends AbstractModel
 {
@@ -25,17 +25,19 @@ final class CatRegistry extends AbstractModel
     public static function find(): CatRegistryQuery
     {
         return new CatRegistryQuery(get_called_class())
-            ->andWhere(['deleted_at' => null]);
+            ->andWhere([ CatRegistry::tableName() . '.deleted_at' => null]);
     }
 
     public function getMother(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(CatRegistry::class, ['id' => 'mother_id']);
+        return $this
+            ->hasOne(CatRegistry::class, ['id' => 'mother_id']);
+            //->from(['parent' => CatRegistry::tableName()]);
     }
 
     public function getFathers(): \yii\db\ActiveQuery
     {
         return $this->hasMany(self::class, ['id' => 'father_id'])
-            ->viaTable('{{%cat_male}}', ['cat_id' => 'id']);
+            ->viaTable(CatMale::tableName(), ['cat_id' => 'id']);
     }
 }

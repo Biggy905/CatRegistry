@@ -18,7 +18,7 @@ class m260930_212534_create_table_cat_registries extends Migration
         $this->createTable(
             $this->tableName,
             [
-
+                'id' => $this->primaryKey(),
                 'name' => $this->string(40)->notNull(),
                 'gender' => $this->string(10)->notNull(),
                 'age' => $this->integer()->notNull()->defaultValue(0),

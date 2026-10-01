@@ -11,31 +11,33 @@ use DateTimeImmutable;
 
 final class CatRegistryRepository implements CatRegistryRepositoryInterface
 {
-    /**
-     * @return array<int, mixed>
-     */
     public function findAll(FilterCatForm $form): array
     {
-        $query = CatRegistry::find();
+        $query = CatRegistry::find()
+            ->with('mother')
+            ->orderBy([CatRegistry::tableName() . '.name' => SORT_ASC]);
 
-        if (!empty($filters['gender'])) {
-            $query->andWhere(['gender' => $filters['gender']]);
-        }
-        if (isset($filters['age_from'])) {
-            $query->andWhere(['>=', 'age', (int)$filters['age_from']]);
-        }
-        if (isset($filters['age_to'])) {
-            $query->andWhere(['<=', 'age', (int)$filters['age_to']]);
+        $age = $form->age ?? null;
+        if (!empty($age)) {
+            $query->andWhere([CatRegistry::tableName() . '.age' => $age]);
         }
 
-        return $query
-            ->orderBy(['id' => SORT_ASC])
-            ->all();
+        $gender = $form->gender ?? null;
+        if (!empty($gender)) {
+            $query->andWhere([CatRegistry::tableName() . '.gender' => $gender]);
+        }
+
+        $limit = $form->limit ?? 20;
+        if ($limit < 20 || $limit > 100) {
+            $limit = 20;
+            $form->limit = 20;
+        }
+
+        $query->limit($limit);
+
+        return $query->all();
     }
 
-    /**
-     * @throws Exception
-     */
     public function create(CatRegistry $catRegistry): void
     {
         if (!$catRegistry->save()) {
@@ -61,14 +63,45 @@ final class CatRegistryRepository implements CatRegistryRepositoryInterface
     public function findId(int $id): CatRegistry
     {
         return CatRegistry::find()
-            ->andWhere(['id' => $id])
+            ->with('mother')
+            ->with('fathers')
+            ->andWhere([CatRegistry::tableName() . '.id' => $id])
             ->one();
+    }
+
+    public function findByNameAndGender(
+        int $id,
+        string $name,
+        string $gender
+    ): array {
+        $query = CatRegistry::find()
+            ->orderBy([CatRegistry::tableName() . '.name' => SORT_ASC])
+            ->limit(50);
+
+        if ($id !== 0) {
+            $query->andWhere(['!=', CatRegistry::tableName() . '.id', $id]);
+        }
+
+        if (!empty($name)) {
+            $query->andWhere(['ilike', CatRegistry::tableName() . '.name', $name]);
+        }
+
+        if (!empty($gender)) {
+            $query->andWhere([CatRegistry::tableName() . '.gender' => $gender]);
+        }
+
+        return $query->all();
     }
 
     public function existsId(int $id): bool
     {
         return CatRegistry::find()
-            ->andWhere(['id' => $id])
+            ->andWhere([CatRegistry::tableName() . '.id' => $id])
             ->exists();
+    }
+
+    public function count(): ?int
+    {
+        return CatRegistry::find()->count();
     }
 }
