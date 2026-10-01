@@ -13,9 +13,8 @@ function toQueryParams(q: CatListQuery): Record<string, unknown> {
   if (q.limit !== undefined) params.limit = q.limit
   if (q.gender) params.gender = q.gender
 
-  if (q.age_range) {
-    const [min, max] = q.age_range
-    params.age_range = `${min},${max}`
+  if (q.age) {
+    params.age = q.age
   }
 
   return params
@@ -35,6 +34,29 @@ export const catsApi = {
   async list(query: CatListQuery = {}): Promise<CatListResponse> {
     const { data } = await http.get<CatListResponse>('/cats', {
       params: toQueryParams(query),
+      paramsSerializer: {
+        serialize: (params: Record<string, unknown>) => {
+          const parts: string[] = []
+
+          for (const [key, value] of Object.entries(params)) {
+            if (value === undefined || value === null || value === '') continue
+
+            if (Array.isArray(value)) {
+              for (const v of value) {z
+                parts.push(
+                  `${encodeURIComponent(key)}[]=${encodeURIComponent(String(v))}`,
+                )
+              }
+            } else {
+              parts.push(
+                `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+              )
+            }
+          }
+
+          return parts.join('&')
+        },
+      },
     })
     return data
   },
@@ -42,7 +64,6 @@ export const catsApi = {
   async get(id: number): Promise<Cat> {
     const { data } = await http.get<Cat | Cat[]>(`/cat/${id}`)
 
-    // Бэк может отдать как объект, так и массив из одного элемента
     const cat = Array.isArray(data) ? data[0] : data
 
     if (!cat) {

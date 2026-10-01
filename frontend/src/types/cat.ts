@@ -11,21 +11,20 @@ export interface CatFlat {
 
 export interface Cat extends CatFlat {
   mother: CatFlat | null
-  fathers: CatFlat[] | null   // ← бэк может вернуть null
+  fathers: CatFlat[] | null
 }
 
 export interface CatListItem extends CatFlat {}
 
 export interface CatFilters {
   gender: CatGender | null
-  age_range: [number, number] | null
+  age: [number, number] | null
 }
 
 export interface CatListQuery extends Partial<CatFilters> {
   page?: number
   limit?: number
 }
-
 export interface CatListResponse {
   items: CatListItem[]
   total: number

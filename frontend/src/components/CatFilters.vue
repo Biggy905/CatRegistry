@@ -17,14 +17,14 @@ const emit = defineEmits<{
 
 const local = reactive<CatFilters>({
   gender: props.modelValue.gender,
-  age_range: props.modelValue.age_range,
+  age: props.modelValue.age,
 })
 
 watch(
   () => props.modelValue,
   (v) => {
     local.gender = v.gender
-    local.age_range = v.age_range
+    local.age = v.age
   },
   { deep: true },
 )
@@ -32,7 +32,7 @@ watch(
 function emitChange() {
   emit('update:modelValue', {
     gender: local.gender,
-    age_range: local.age_range,
+    age: local.age,
   })
 }
 </script>
@@ -51,10 +51,10 @@ function emitChange() {
 
       <div class="col-md-5">
         <CatAgeRangeFilter
-          :model-value="local.age_range"
+          :model-value="local.age"
           :min="minAge ?? 0"
           :max="maxAge ?? 30"
-          @update:model-value="(v) => { local.age_range = v; emitChange() }"
+          @update:model-value="(v) => { local.age = v; emitChange() }"
         />
       </div>
 

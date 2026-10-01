@@ -84,7 +84,7 @@ async function remove() {
 
             <dt class="col-sm-3">Отцы</dt>
             <dd class="col-sm-9">
-              <template v-if="cat.fathers.length">
+              <template v-if="cat.fathers?.length">
                 <RouterLink
                   v-for="f in cat.fathers"
                   :key="f.id"

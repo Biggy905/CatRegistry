@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { catsApi } from '@/api/cats'
 import type { Cat, CatFilters } from '@/types/cat'
 
@@ -13,9 +13,10 @@ export const useCatsStore = defineStore('cats', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  const filters = reactive<CatFilters>({
+  // ← ref, а не reactive
+  const filters = ref<CatFilters>({
     gender: null,
-    age_range: null,
+    age: null,
   })
 
   async function fetchList() {
@@ -26,14 +27,13 @@ export const useCatsStore = defineStore('cats', () => {
       const data = await catsApi.list({
         page: page.value,
         limit: limit.value,
-        gender: filters.gender,
-        age_range: filters.age_range,
+        gender: filters.value.gender,   // ← .value
+        age: filters.value.age,         // ← .value
       })
 
       items.value = Array.isArray(data?.items) ? data.items : []
       total.value = typeof data?.total === 'number' ? data.total : items.value.length
     } catch (e) {
-      // Ошибку уже показал интерцептор — здесь только логируем
       error.value = e instanceof Error ? e.message : String(e)
       items.value = []
       total.value = 0
@@ -60,8 +60,8 @@ export const useCatsStore = defineStore('cats', () => {
   }
 
   function resetFilters() {
-    filters.gender = null
-    filters.age_range = null
+    filters.value.gender = null
+    filters.value.age = null
     page.value = 1
     return fetchList()
   }

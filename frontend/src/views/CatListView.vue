@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import { useCatsStore } from '@/stores/cats'
+import type { CatFilters } from '@/types/cat'
 import CatCard from '@/components/CatCard.vue'
 import CatPagination from '@/components/CatPagination.vue'
 import CatFiltersBar from '@/components/CatFilters.vue'
@@ -14,6 +15,18 @@ onMounted(() => store.fetchList())
 
 watch(page, () => store.fetchList())
 watch(limit, () => store.fetchList())
+
+function onFiltersUpdate(v: CatFilters) {
+  filters.value = v
+}
+
+function onFiltersApply() {
+  store.applyFilters()
+}
+
+function onFiltersReset() {
+  store.resetFilters()
+}
 </script>
 
 <template>
@@ -26,9 +39,10 @@ watch(limit, () => store.fetchList())
     </div>
 
     <CatFiltersBar
-      v-model="filters"
-      @apply="store.applyFilters()"
-      @reset="store.resetFilters()"
+      :model-value="filters"
+      @update:model-value="onFiltersUpdate"
+      @apply="onFiltersApply"
+      @reset="onFiltersReset"
     />
 
     <div v-if="loading" class="text-center py-5">

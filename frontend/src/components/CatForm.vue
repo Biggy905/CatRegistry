@@ -47,14 +47,14 @@ watch(
 
     // fathers может быть null — приводим к массиву
     const fathers = cat.fathers ?? []
-    form.father_ids = fathers.map((f) => f.id)
+    form.father_ids = cat.fathers?.map((f) => f.id) ?? []
 
     // Предзаполняем options
     motherOptions.value = cat.mother
       ? [{ id: cat.mother.id, text: cat.mother.name }]
       : []
 
-    fatherOptions.value = fathers.map((f) => ({ id: f.id, text: f.name }))
+    fatherOptions.value = cat.fathers?.map((f) => ({ id: f.id, text: f.name })) ?? []
   },
   { immediate: true },
 )
