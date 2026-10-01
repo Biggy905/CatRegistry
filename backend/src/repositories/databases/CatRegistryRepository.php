@@ -4,6 +4,7 @@ namespace CatRegistry\applications\repositories\databases;
 
 use CatRegistry\applications\entities\CatRegistry;
 use CatRegistry\applications\forms\FilterCatForm;
+use CatRegistry\applications\queries\CatRegistryQuery;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
 use yii\db\Exception;
 use LogicException;
@@ -13,29 +14,12 @@ final class CatRegistryRepository implements CatRegistryRepositoryInterface
 {
     public function findAll(FilterCatForm $form): array
     {
-        $query = CatRegistry::find()
-            ->with('mother')
-            ->orderBy([CatRegistry::tableName() . '.name' => SORT_ASC]);
+        return $this->queryFilter($form)->all();
+    }
 
-        $age = $form->age ?? null;
-        if (!empty($age)) {
-            $query->andWhere([CatRegistry::tableName() . '.age' => $age]);
-        }
-
-        $gender = $form->gender ?? null;
-        if (!empty($gender)) {
-            $query->andWhere([CatRegistry::tableName() . '.gender' => $gender]);
-        }
-
-        $limit = $form->limit ?? 20;
-        if ($limit < 20 || $limit > 100) {
-            $limit = 20;
-            $form->limit = 20;
-        }
-
-        $query->limit($limit);
-
-        return $query->all();
+    public function countForFilter(FilterCatForm $form): ?int
+    {
+        return $this->queryFilter($form)->count();
     }
 
     public function create(CatRegistry $catRegistry): void
@@ -100,8 +84,39 @@ final class CatRegistryRepository implements CatRegistryRepositoryInterface
             ->exists();
     }
 
-    public function count(): ?int
+    private function queryFilter(FilterCatForm $form): CatRegistryQuery
     {
-        return CatRegistry::find()->count();
+        $query = CatRegistry::find()
+            ->with('mother')
+            ->orderBy([CatRegistry::tableName() . '.name' => SORT_ASC]);
+
+        $age = $form->age ?? null;
+        if (!empty($age)) {
+            [$min, $max] = array_map('intval', $age);
+            if ($min > $max) {
+                [$min, $max] = [$max, $min];
+            }
+
+            $query->andWhere(['between', CatRegistry::tableName() . '.age', $min, $max]);
+        }
+
+        $gender = $form->gender ?? null;
+        if (!empty($gender)) {
+            $query->andWhere([CatRegistry::tableName() . '.gender' => $gender]);
+        }
+
+        $limit = $form->limit ?? 10;
+        if ($limit < 10 || $limit > 100) {
+            $limit = 10;
+            $form->limit = 10;
+        }
+
+        $page = $form->page ?? 1;
+        if ($page && $limit) {
+            $query->limit($limit);
+            $query->offset($page * $limit - $limit);
+        }
+
+        return $query;
     }
 }

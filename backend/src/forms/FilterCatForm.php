@@ -37,6 +37,28 @@ final class FilterCatForm extends AbstractForm
 
     public function validateAge()
     {
+        if ($this->age === null || $this->age === '') {
+            return;
+        }
 
+        if (!is_array($this->age)) {
+            $this->addError('age', 'Должны быть минимальные и максимальные числа.');
+            return;
+        }
+
+        if (is_array($this->age)) {
+            $count = count($this->age);
+            if ($count !== 2) {
+                $this->addError('age', 'Должны быть минимальные и максимальные числа.');
+                return;
+            }
+
+            foreach ($this->age as $value) {
+                if (!is_numeric($value) || (int) $value != $value) {
+                    $this->addError('age', 'Должны быть минимальные и максимальные числа.');
+                    return;
+                }
+            }
+        }
     }
 }

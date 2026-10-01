@@ -32,5 +32,5 @@ interface CatRegistryRepositoryInterface
 
     public function existsId(int $id): bool;
 
-    public function count(): ?int;
+    public function countForFilter(FilterCatForm $form): ?int;
 }

@@ -38,7 +38,7 @@ final class CatRegistryServices
             $this->catRegistryRepository->findAll($form)
         )->toArray();
 
-        $total = $this->catRegistryRepository->count();
+        $total = $this->catRegistryRepository->countForFilter($form);
 
         return [
             'items' => $cats,
@@ -92,7 +92,33 @@ final class CatRegistryServices
 
     public function update(UpdateCatForm $form): void
     {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $catRegistry = $this->catRegistryRepository->findId($form->id);
+            $catRegistry->name = $form->name;
+            $catRegistry->age = $form->age;
+            $catRegistry->gender = $form->gender;
+            $catRegistry->mother_id = $form->mother_id ?? null;
+            $catRegistry->updated_at = (new DateTimeImmutable())->format('Y-m-d H:i:s');
 
+            $this->catRegistryRepository->update($catRegistry);
+
+            $catRegistry->unlinkAll('fathers', true);
+            if (!empty($form->father_ids) && is_array($form->father_ids)) {
+                $fathers = CatRegistry::find()
+                    ->where(['id' => $form->father_ids])
+                    ->all();
+
+                foreach ($fathers as $father) {
+                    $catRegistry->link('fathers', $father);
+                }
+            }
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
     }
 
     public function delete(IdCatForm $form): void
