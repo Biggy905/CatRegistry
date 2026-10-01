@@ -13,6 +13,12 @@ PHP     := cat-registry-php-fpm
 FRONT   := cat-registry-frontend
 PG      := cat-registry-postgres
 
+# Рабочая директория backend внутри контейнера
+BACKEND_DIR := /app/backend
+
+# Флаги для консольных команд Yii2 (без интерактива)
+YII_FLAGS := --interactive=0
+
 # ─────────────────────────────────────────────────────────────
 # Первый запуск
 # ─────────────────────────────────────────────────────────────
@@ -29,10 +35,10 @@ init: env network ## Первый запуск: .env, сеть, сборка, п
 	echo " ok"
 
 	@echo "→ Установка PHP-зависимостей..."
-	$(COMPOSE) exec -T -w /app/backend $(PHP) composer install
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) composer install
 
 	@echo "→ Применение миграций..."
-	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) php console migrate $(YII_FLAGS)
 
 	@echo "→ Ожидание готовности frontend (npm install)..."
 	@until $(COMPOSE) exec -T $(FRONT) test -d node_modules >/dev/null 2>&1; do \
@@ -108,22 +114,26 @@ ps: ## Статус контейнеров
 # Backend
 # ─────────────────────────────────────────────────────────────
 .PHONY: migrate
-migrate: ## Применить миграции
-	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate
+migrate: ## Применить миграции (без подтверждения)
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) php console migrate $(YII_FLAGS)
 
 .PHONY: migrate-down
-migrate-down: ## Откатить последнюю миграцию
-	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate/down 1
+migrate-down: ## Откатить последнюю миграцию (без подтверждения)
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) php console migrate/down 1 $(YII_FLAGS)
+
+.PHONY: migrate-fresh
+migrate-fresh: ## ⚠ Drop всех таблиц и заново применить миграции
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) php console migrate/fresh $(YII_FLAGS)
 
 .PHONY: migrate-create
 migrate-create: ## Создать миграцию: make migrate-create name=create_foo_table
 	@if [ -z "$(name)" ]; then echo "Укажите name=..."; exit 1; fi
-	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate/create $(name) \
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) php console migrate/create $(name) \
 		--namespace='CatRegistry\applications\migrations'
 
 .PHONY: composer
 composer: ## Установить composer-зависимости
-	$(COMPOSE) exec -T -w /app/backend $(PHP) composer install
+	$(COMPOSE) exec -T -w $(BACKEND_DIR) $(PHP) composer install
 
 .PHONY: bash-php
 bash-php: ## Зайти в PHP-контейнер
