@@ -8,8 +8,10 @@ COMPOSE      := docker compose
 NETWORK_NAME := cat-registry-network
 
 # Имена сервисов из docker-compose.yaml
+NGINX   := cat-registry-nginx
 PHP     := cat-registry-php-fpm
 FRONT   := cat-registry-frontend
+PG      := cat-registry-postgres
 
 # ─────────────────────────────────────────────────────────────
 # Первый запуск
@@ -20,20 +22,24 @@ init: env network ## Первый запуск: .env, сеть, сборка, п
 	$(COMPOSE) up -d --build
 
 	@echo "→ Ожидание готовности PostgreSQL..."
-	@until $(COMPOSE) exec -T cat-registry-postgres pg_isready -U postgres -d db >/dev/null 2>&1; do \
+	@until $(COMPOSE) exec -T $(PG) pg_isready -U postgres -d db >/dev/null 2>&1; do \
 		printf "."; \
 		sleep 1; \
 	done; \
 	echo " ok"
 
 	@echo "→ Установка PHP-зависимостей..."
-	$(COMPOSE) exec -T $(PHP) composer install
-
-	@echo "→ Установка npm-зависимостей..."
-	$(COMPOSE) exec -T $(FRONT) npm install
+	$(COMPOSE) exec -T -w /app/backend $(PHP) composer install
 
 	@echo "→ Применение миграций..."
-	$(COMPOSE) exec -T $(PHP) php console migrate
+	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate
+
+	@echo "→ Ожидание готовности frontend (npm install)..."
+	@until $(COMPOSE) exec -T $(FRONT) test -d node_modules >/dev/null 2>&1; do \
+		printf "."; \
+		sleep 2; \
+	done; \
+	echo " ok"
 
 	@echo ""
 	@echo "✓ Готово."
@@ -82,6 +88,18 @@ restart: ## Перезапустить контейнеры
 logs: ## Логи всех контейнеров
 	$(COMPOSE) logs -f
 
+.PHONY: logs-php
+logs-php: ## Логи php-fpm
+	$(COMPOSE) logs -f $(PHP)
+
+.PHONY: logs-front
+logs-front: ## Логи frontend
+	$(COMPOSE) logs -f $(FRONT)
+
+.PHONY: logs-nginx
+logs-nginx: ## Логи nginx
+	$(COMPOSE) logs -f $(NGINX)
+
 .PHONY: ps
 ps: ## Статус контейнеров
 	$(COMPOSE) ps
@@ -91,21 +109,21 @@ ps: ## Статус контейнеров
 # ─────────────────────────────────────────────────────────────
 .PHONY: migrate
 migrate: ## Применить миграции
-	$(COMPOSE) exec -T $(PHP) php console migrate
+	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate
 
 .PHONY: migrate-down
 migrate-down: ## Откатить последнюю миграцию
-	$(COMPOSE) exec -T $(PHP) php console migrate/down 1
+	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate/down 1
 
 .PHONY: migrate-create
 migrate-create: ## Создать миграцию: make migrate-create name=create_foo_table
 	@if [ -z "$(name)" ]; then echo "Укажите name=..."; exit 1; fi
-	$(COMPOSE) exec -T $(PHP) php console migrate/create $(name) \
+	$(COMPOSE) exec -T -w /app/backend $(PHP) php console migrate/create $(name) \
 		--namespace='CatRegistry\applications\migrations'
 
 .PHONY: composer
 composer: ## Установить composer-зависимости
-	$(COMPOSE) exec -T $(PHP) composer install
+	$(COMPOSE) exec -T -w /app/backend $(PHP) composer install
 
 .PHONY: bash-php
 bash-php: ## Зайти в PHP-контейнер

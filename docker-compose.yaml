@@ -30,7 +30,7 @@ services:
     volumes:
       - ./:/app
     working_dir: /app/frontend
-    command: npm run dev
+    command: sh -c "test -d node_modules || npm install; npm run dev"
     tty: true
     restart: unless-stopped
 
