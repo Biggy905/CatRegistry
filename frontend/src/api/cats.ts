@@ -42,7 +42,7 @@ export const catsApi = {
             if (value === undefined || value === null || value === '') continue
 
             if (Array.isArray(value)) {
-              for (const v of value) {z
+              for (const v of value) {
                 parts.push(
                   `${encodeURIComponent(key)}[]=${encodeURIComponent(String(v))}`,
                 )
