@@ -53,7 +53,6 @@ async function remove() {
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0">{{ cat.name }}</h1>
         <div class="d-flex gap-2">
-          <button class="btn btn-outline-secondary" @click="router.back()">Назад</button>
           <RouterLink
             :to="{ name: 'cats-edit', params: { id: cat.id } }"
             class="btn btn-outline-primary"
