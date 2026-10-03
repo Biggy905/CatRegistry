@@ -10,6 +10,7 @@ use CatRegistry\applications\forms\IdCatForm;
 use CatRegistry\applications\forms\SearchCatForm;
 use CatRegistry\applications\forms\UpdateCatForm;
 use CatRegistry\applications\services\CatRegistryServices;
+use yii\helpers\Url;
 use Yii;
 
 final class CatController extends RestController
@@ -35,7 +36,7 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
+        return $this->responseOK(
             $this->services->item($form),
         );
     }
@@ -49,7 +50,7 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
+        return $this->responseOK(
             $this->services->search($form),
         );
     }
@@ -68,7 +69,7 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        return $this->response(
+        return $this->responseOK(
             $this->services->list($form),
         );
     }
@@ -81,9 +82,12 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        $this->services->insert($form);
+        $cat = $this->services->insert($form);
 
-        return $this->response();
+        return $this->responseCreated(
+            $cat->toArray(),
+            Url::to(['cat/item', 'id' => $cat->catRegistry->id]),
+        );
     }
 
     public function actionUpdate(int $id): array
@@ -96,12 +100,12 @@ final class CatController extends RestController
             throw new BadRequestHttpException(null, $form->getErrors());
         }
 
-        $this->services->update($form);
-
-        return $this->response();
+        return $this->responseOK(
+            $this->services->update($form)->toArray(),
+        );
     }
 
-    public function actionDelete(int $id): array
+    public function actionDelete(int $id): void
     {
         $form = $this->idCatForm;
         if (!$form->runValidate(['id' => $id])) {
@@ -110,6 +114,6 @@ final class CatController extends RestController
 
         $this->services->delete($form);
 
-        return $this->response();
+        $this->responseNoContent();
     }
 }

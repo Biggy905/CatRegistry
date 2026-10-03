@@ -9,12 +9,12 @@ use CatRegistry\applications\forms\IdCatForm;
 use CatRegistry\applications\forms\SearchCatForm;
 use CatRegistry\applications\forms\UpdateCatForm;
 use CatRegistry\applications\groups\CatFilterListGroup;
-use CatRegistry\applications\groups\CatListGroup;
 use CatRegistry\applications\groups\CatSelectItemGroup;
 use CatRegistry\applications\groups\SearchCatListGroup;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
 use Yii;
 use DateTimeImmutable;
+use Throwable;
 
 final class CatRegistryServices
 {
@@ -41,10 +41,10 @@ final class CatRegistryServices
         $total = $this->catRegistryRepository->countForFilter($form);
 
         return [
-            'items' => $cats,
             'total' => $total ?? 0,
             'page' => $form->page,
             'limit' => $form->limit,
+            'items' => $cats,
         ];
     }
 
@@ -61,7 +61,7 @@ final class CatRegistryServices
         ];
     }
 
-    public function insert(CreateCatForm $form): void
+    public function insert(CreateCatForm $form): CatSelectItemGroup
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
@@ -84,13 +84,15 @@ final class CatRegistryServices
             }
 
             $transaction->commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $transaction->rollBack();
             throw $e;
         }
+
+        return new CatSelectItemGroup($catRegistry);
     }
 
-    public function update(UpdateCatForm $form): void
+    public function update(UpdateCatForm $form): CatSelectItemGroup
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
@@ -115,14 +117,28 @@ final class CatRegistryServices
             }
 
             $transaction->commit();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $transaction->rollBack();
             throw $e;
         }
+
+        return new CatSelectItemGroup($catRegistry);
     }
 
     public function delete(IdCatForm $form): void
     {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $catRegistry = $this->catRegistryRepository->findId($form->id);
 
+            $this->catRegistryRepository->delete($catRegistry);
+
+            $catRegistry->unlinkAll('fathers', true);
+
+            $transaction->commit();
+        } catch (Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
     }
 }

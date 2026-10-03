@@ -21,9 +21,10 @@ final class CatSelectItemGroup implements GroupInterface
         }
 
         $fathers = null;
-        if (!empty($this->catRegistry->mother)) {
+        if (!empty($this->catRegistry->fathers)) {
             $fathers = new CatListGroup($this->catRegistry->fathers)->toArray();
         }
+
         return [
             'id' => $this->catRegistry->id,
             'name' => $this->catRegistry->name,

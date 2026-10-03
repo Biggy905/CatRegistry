@@ -76,7 +76,7 @@ final class CreateCatForm extends AbstractForm
             if (is_int($this->mother_id)) {
                 $motherCat = $this->catRegistryRepository->findId($this->mother_id);
                 if ($this->age > $motherCat->age) {
-                    $this->addError('age', 'возраст матери ≥ возраст котёнка');
+                    $this->addError('age', 'Возраст матери должен быть больше возраста котёнка');
                 }
             }
         } else {
