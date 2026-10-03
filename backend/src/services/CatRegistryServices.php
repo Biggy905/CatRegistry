@@ -11,25 +11,32 @@ use CatRegistry\applications\forms\UpdateCatForm;
 use CatRegistry\applications\groups\CatFilterListGroup;
 use CatRegistry\applications\groups\CatSelectItemGroup;
 use CatRegistry\applications\groups\SearchCatListGroup;
+use CatRegistry\applications\policies\CatKinshipPolicy;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
+use yii\db\Exception;
+use yii\web\BadRequestHttpException;
+use yii\web\NotFoundHttpException;
 use Yii;
 use DateTimeImmutable;
 use Throwable;
 
-final class CatRegistryServices
+final readonly class CatRegistryServices
 {
     public function __construct(
-        private readonly CatRegistryRepositoryInterface $catRegistryRepository
+        private CatRegistryRepositoryInterface $catRegistryRepository,
+        private CatKinshipPolicy $catKinshipPolicy,
     ) {
 
     }
+
     public function item(IdCatForm $form): array
     {
-        return [
-            new CatSelectItemGroup(
-                $this->catRegistryRepository->findId($form->id)
-            )->toArray(),
-        ];
+        $catRegistry = $this->catRegistryRepository->findId($form->id);
+        if ($catRegistry === null) {
+            throw new NotFoundHttpException('Запись не найдена');
+        }
+
+        return new CatSelectItemGroup($catRegistry)->toArray();
     }
 
     public function list(FilterCatForm $form): array
@@ -61,10 +68,22 @@ final class CatRegistryServices
         ];
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     * @throws Throwable
+     * @throws Exception
+     * @throws BadRequestHttpException
+     */
     public function insert(CreateCatForm $form): CatSelectItemGroup
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            $this->catKinshipPolicy->ensureCanAssignParents(
+                catId: null,
+                motherId: $form->mother_id,
+                fatherIds: $form->father_ids ?? []
+            );
+
             $catRegistry = new CatRegistry();
             $catRegistry->name = $form->name;
             $catRegistry->age = $form->age;
@@ -96,7 +115,17 @@ final class CatRegistryServices
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            $this->catKinshipPolicy->ensureCanAssignParents(
+                catId: $form->id,
+                motherId: $form->mother_id,
+                fatherIds: $form->father_ids ?? [],
+            );
+
             $catRegistry = $this->catRegistryRepository->findId($form->id);
+            if ($catRegistry === null) {
+                throw new NotFoundHttpException('Запись не найдена');
+            }
+
             $catRegistry->name = $form->name;
             $catRegistry->age = $form->age;
             $catRegistry->gender = $form->gender;
@@ -130,6 +159,9 @@ final class CatRegistryServices
         $transaction = Yii::$app->db->beginTransaction();
         try {
             $catRegistry = $this->catRegistryRepository->findId($form->id);
+            if ($catRegistry === null) {
+                throw new NotFoundHttpException('Запись не найдена');
+            }
 
             $this->catRegistryRepository->delete($catRegistry);
 

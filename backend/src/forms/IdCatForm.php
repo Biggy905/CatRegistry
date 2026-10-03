@@ -28,18 +28,6 @@ final class IdCatForm extends AbstractForm
                 'id',
                 'required',
             ],
-            [
-                'id',
-                'validateId',
-            ],
         ];
-    }
-
-    public function validateId(): void
-    {
-        $exists = $this->catRegistryRepository->existsId($this->id);
-        if (!$exists) {
-            throw new NotFoundHttpException('Запись не найдена');
-        }
     }
 }

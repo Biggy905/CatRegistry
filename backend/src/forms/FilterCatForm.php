@@ -35,7 +35,7 @@ final class FilterCatForm extends AbstractForm
         ];
     }
 
-    public function validateAge()
+    public function validateAge(): void
     {
         if ($this->age === null || $this->age === '') {
             return;
