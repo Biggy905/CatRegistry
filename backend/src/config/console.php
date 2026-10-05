@@ -7,6 +7,16 @@ return [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'CatRegistry\applications\controllers\console',
+    'controllerMap' => [
+        'fixture' => [
+            'class' => \yii\console\controllers\FixtureController::class,
+            'namespace' => 'CatRegistry\tests\Unit\fixtures',
+            'globalFixtures' => [
+                \CatRegistry\tests\Unit\fixtures\CatRegistryFixture::class,
+                \CatRegistry\tests\Unit\fixtures\CatMaleFixture::class,
+            ],
+        ],
+    ],
     'aliases' => [],
     'components' => [
         'cache' => [

@@ -1,0 +1,13 @@
+actor: UnitTester
+namespace: CatRegistry\tests\Support
+suite_namespace: tests\Unit
+bootstrap: config/bootstrap.php
+modules:
+  enabled:
+    - Asserts
+    - Yii2:
+        class: \Codeception\Lib\Connector\Yii2
+        part: [ orm, fixtures, email ]
+        configFile: test/config/test.php
+        yiiLogger: Codeception\Lib\Connector\Yii2\Logger
+  step_decorators: ~

@@ -1,0 +1,44 @@
+namespace: CatRegistry\tests
+
+paths:
+  tests: tests
+  output: tests/Support/output
+  support: tests/Support
+  data: tests/Support/data
+
+settings:
+  colors: true
+  shuffle: false
+  lint: true
+  bootstrap: tests/Unit/config/bootstrap.php
+
+extensions:
+  enabled:
+    - Codeception\Extension\RunFailed
+
+modules:
+  config:
+    Yii2:
+      configFile: 'tests/Unit/config/test.php'
+      cleanup: false
+
+coverage:
+  enabled: true
+  whitelist:
+    include:
+      - src/components/*
+      - src/entities/*
+      - src/enums/*
+      - src/exceptions/*
+      - src/forms/*
+      - src/groups/*
+      - src/policies/*
+      - src/queries/*
+      - src/repositories/*
+      - src/services/*
+    exclude:
+      - tests/*
+      - vendor/*
+  show_uncovered: true
+  show_only_summary: false
+  html: tests/Support/output/coverage

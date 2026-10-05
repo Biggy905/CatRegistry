@@ -39,7 +39,11 @@ final class UpdateCatForm extends AbstractForm
     {
         return [
             [
-                ['id', 'name', 'gender', 'age'],
+                ['name', 'gender', 'age'],
+                'required',
+            ],
+            [
+                'id',
                 'required',
             ],
             [
@@ -92,6 +96,10 @@ final class UpdateCatForm extends AbstractForm
             if (!$exists) {
                 throw new NotFoundHttpException('Запись не найдена');
             }
+        }
+
+        if (!is_int($this->id)) {
+            $this->addError('id', 'Идентификатор должен быть целым числом.');
         }
     }
 
