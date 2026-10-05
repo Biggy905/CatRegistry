@@ -60,6 +60,7 @@ return [
         'useCookies' => true,
     ],
     'log' => [
+        // @phpstan-ignore ternary.alwaysFalse
         'traceLevel' => YII_DEBUG ? 3 : 0,
         'targets' => [
             [

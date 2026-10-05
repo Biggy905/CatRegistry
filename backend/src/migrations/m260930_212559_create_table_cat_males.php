@@ -13,7 +13,7 @@ class m260930_212559_create_table_cat_males extends Migration
         $this->tableName = \CatRegistry\applications\entities\CatMale::tableName();
     }
 
-    public function up(): void
+    public function up()
     {
         $this->createTable(
             $this->tableName,
@@ -25,7 +25,7 @@ class m260930_212559_create_table_cat_males extends Migration
         );
     }
 
-    public function down(): void
+    public function down()
     {
         $this->dropTable($this->tableName);
     }

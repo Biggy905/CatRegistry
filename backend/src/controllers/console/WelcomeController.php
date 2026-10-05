@@ -6,7 +6,7 @@ use yii\console\Controller;
 
 final class WelcomeController extends Controller
 {
-    public function actionIndex()
+    public function actionIndex(): void
     {
         echo "Добро пожаловать в CLI приложения\n";
     }

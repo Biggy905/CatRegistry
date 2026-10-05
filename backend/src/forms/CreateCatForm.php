@@ -9,17 +9,28 @@ use yii\web\NotFoundHttpException;
 
 final class CreateCatForm extends AbstractForm
 {
+    /** @var ?mixed $name */
     public $name;
+    /** @var ?mixed $gender */
     public $gender;
+    /** @var ?mixed $age */
     public $age;
+    /** @var ?mixed $mother_id */
     public $mother_id;
+    /** @var ?mixed $father_ids */
     public $father_ids;
 
+    /**
+     * @param CatRegistryRepositoryInterface $catRegistryRepository
+     * @param array<mixed> $attributes
+     * @param array<mixed> $config
+     */
     public function __construct(
         private readonly CatRegistryRepositoryInterface $catRegistryRepository,
+        array $attributes = [],
         $config = [],
     ) {
-        parent::__construct($config);
+        parent::__construct($attributes, $config);
     }
 
     public function rules(): array
@@ -73,11 +84,13 @@ final class CreateCatForm extends AbstractForm
                 throw new NotFoundHttpException('Запись не найдена');
             }
 
-            if (is_int($this->mother_id)) {
-                $motherCat = $this->catRegistryRepository->findId($this->mother_id);
-                if ($this->age > $motherCat->age) {
-                    $this->addError('age', 'Возраст матери должен быть больше возраста котёнка');
-                }
+            $motherCat = $this->catRegistryRepository->findId($this->mother_id);
+            if ($motherCat === null) {
+                throw new NotFoundHttpException('Запись не найдена');
+            }
+
+            if ($this->age > $motherCat->age) {
+                $this->addError('age', 'Возраст матери должен быть больше возраста котёнка');
             }
         } else {
             $this->addError('mother_id', 'Неверное значение атрибута');
@@ -86,8 +99,17 @@ final class CreateCatForm extends AbstractForm
 
     public function validateFatherIds(): void
     {
+        if ($this->father_ids === null) {
+            return;
+        }
+
         if (is_array($this->father_ids)) {
             foreach ($this->father_ids as $id) {
+                if (!is_int($id)) {
+                    $this->addError('father_ids', 'Каждый отец должен быть целым числом.');
+                    return;
+                }
+
                 $exists = $this->catRegistryRepository->existsId($id);
                 if (!$exists) {
                     throw new NotFoundHttpException('Запись не найдена');

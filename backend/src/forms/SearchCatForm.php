@@ -9,16 +9,12 @@ use yii\web\NotFoundHttpException;
 
 final class SearchCatForm extends AbstractForm
 {
+    /** @var ?mixed $exclude_cat_id */
     public $exclude_cat_id;
+    /** @var ?mixed $name */
     public $name;
+    /** @var ?mixed $gender */
     public $gender;
-
-    public function __construct(
-        private readonly CatRegistryRepositoryInterface $catRegistryRepository,
-        $config = [],
-    ) {
-        parent::__construct($config);
-    }
 
     public function rules(): array
     {

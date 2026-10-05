@@ -13,7 +13,9 @@ use CatRegistry\applications\groups\CatSelectItemGroup;
 use CatRegistry\applications\groups\SearchCatListGroup;
 use CatRegistry\applications\policies\CatKinshipPolicy;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
+use yii\db\Connection;
 use yii\db\Exception;
+use yii\web\Application;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use Yii;
@@ -29,20 +31,30 @@ final readonly class CatRegistryServices
 
     }
 
+    /**
+     * @param IdCatForm $form
+     * @return array<int|string, mixed>
+     * @throws NotFoundHttpException
+     */
     public function item(IdCatForm $form): array
     {
         $catRegistry = $this->catRegistryRepository->findId($form->id);
-        if ($catRegistry === null) {
+        if (empty($catRegistry)) {
             throw new NotFoundHttpException('Запись не найдена');
         }
 
         return new CatSelectItemGroup($catRegistry)->toArray();
     }
 
+    /**
+     * @param FilterCatForm $form
+     * @return array<string, mixed>
+     */
     public function list(FilterCatForm $form): array
     {
+        $list = $this->catRegistryRepository->findAll($form);
         $cats = new CatFilterListGroup(
-            $this->catRegistryRepository->findAll($form)
+            $list
         )->toArray();
 
         $total = $this->catRegistryRepository->countForFilter($form);
@@ -55,6 +67,10 @@ final readonly class CatRegistryServices
         ];
     }
 
+    /**
+     * @param SearchCatForm $form
+     * @return array<string, mixed>
+     */
     public function search(SearchCatForm $form): array
     {
         return [
@@ -93,11 +109,13 @@ final readonly class CatRegistryServices
 
             $this->catRegistryRepository->create($catRegistry);
             if (!empty($form->father_ids) && is_array($form->father_ids)) {
+                /** @var CatRegistry[] $fathers */
                 $fathers = CatRegistry::find()
                     ->where(['id' => $form->father_ids])
                     ->all();
 
                 foreach ($fathers as $father) {
+                    /** @var CatRegistry $father */
                     $catRegistry->link('fathers', $father);
                 }
             }
@@ -136,11 +154,13 @@ final readonly class CatRegistryServices
 
             $catRegistry->unlinkAll('fathers', true);
             if (!empty($form->father_ids) && is_array($form->father_ids)) {
+                /** @var CatRegistry[] $fathers */
                 $fathers = CatRegistry::find()
                     ->where(['id' => $form->father_ids])
                     ->all();
 
                 foreach ($fathers as $father) {
+                    /** @var CatRegistry $father */
                     $catRegistry->link('fathers', $father);
                 }
             }

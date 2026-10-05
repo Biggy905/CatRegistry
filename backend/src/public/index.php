@@ -12,6 +12,10 @@ use Dotenv\Dotenv;
 $rootPath = Yii::getAlias('@root');
 $appPath = Yii::getAlias('@app');
 
+if ($rootPath === false || $appPath === false) {
+    throw new RuntimeException('Не удалось разрешить алиасы @root или @app');
+}
+
 (Dotenv::createUnsafeImmutable(
     $rootPath,
     ['.env'],

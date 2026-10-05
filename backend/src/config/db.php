@@ -17,9 +17,12 @@ return [
         ],
     ],
     'on afterOpen' => static function (\yii\base\Event $event) {
+        if (!$event->sender instanceof \yii\db\Connection) {
+            return;
+        }
         $event->sender->createCommand("SET time zone 'UTC'")->execute();
     },
     'attributes' => [
-        PDO::ATTR_PERSISTENT => getenv('DB_PERSISTENT') ?? true,
+        PDO::ATTR_PERSISTENT => getenv('DB_PERSISTENT') === 'true',
     ],
 ];

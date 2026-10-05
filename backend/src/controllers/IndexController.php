@@ -6,9 +6,12 @@ use CatRegistry\applications\components\RestController;
 
 final class IndexController extends RestController
 {
+    /**
+     * @return array<mixed>
+     */
     public function actionIndex(): array
     {
-        return $this->response(
+        return $this->responseOK(
             [
                 'message' => 'Добро пожаловать!'
             ]

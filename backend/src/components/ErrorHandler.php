@@ -11,7 +11,7 @@ use Throwable;
 
 final class ErrorHandler extends \yii\web\ErrorHandler
 {
-    protected function renderException($exception)
+    protected function renderException($exception): void
     {
         $response = new Response();
         $response->data = [
@@ -40,14 +40,8 @@ final class ErrorHandler extends \yii\web\ErrorHandler
             $response->setStatusCode($code);
 
             $response->data = [
-                'code' => $code ?: 500,
+                'code' => $code,
                 'message' => $exception->getMessage(),
-            ];
-        } elseif ($exception instanceof Throwable) {
-            $response->setStatusCode($exception->statusCode ?? 500);
-            $response->data = [
-                'code' => $exception->statusCode ?? 500,
-                'message' => $this->convertExceptionToArray($exception),
             ];
         } else {
             $response->setStatusCode($exception->statusCode ?? 500);
@@ -61,6 +55,10 @@ final class ErrorHandler extends \yii\web\ErrorHandler
         $response->send();
     }
 
+    /**
+     * @param Throwable $exception
+     * @return array<string, mixed>
+     */
     protected function convertExceptionToArray($exception): array
     {
         $name = 'Exception';

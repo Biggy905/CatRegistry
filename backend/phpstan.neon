@@ -1,0 +1,8 @@
+parameters:
+    level: 9
+    paths:
+        - src
+    scanDirectories:
+        - vendor/yiisoft/yii2
+    bootstrapFiles:
+        - vendor/yiisoft/yii2/Yii.php

@@ -7,6 +7,9 @@ use CatRegistry\applications\entities\CatRegistry;
 
 final class SearchCatListGroup implements GroupInterface
 {
+    /**
+     * @param CatRegistry[] $catRegistries
+     */
     public function __construct(
         public array $catRegistries
     ) {

@@ -2,8 +2,9 @@
 
 namespace CatRegistry\applications\policies;
 
+use CatRegistry\applications\exceptions\BadRequestHttpException;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
-use yii\web\BadRequestHttpException;
+
 
 final readonly class CatKinshipPolicy
 {
@@ -25,7 +26,7 @@ final readonly class CatKinshipPolicy
         ?int $catId,
         ?int $motherId,
         array $fatherIds,
-    ) {
+    ): void {
         // Кошка не может быть своим родителем.
         $this->ensureNoSelfParenting($catId, $motherId, $fatherIds);
 
@@ -102,10 +103,15 @@ final readonly class CatKinshipPolicy
     {
         foreach ($fatherIds as $id) {
             $father = $this->repository->findId($id);
-            if ($father === null || $father->gender !== 'male') {
-                $name = $father->name;
+            if ($father === null) {
                 throw new BadRequestHttpException(null, [
-                    'father_ids' => "{$name}(id=$id) должен быть мужского пола.",
+                    'father_ids' => "Отец с id=$id не найден .",
+                ]);
+            }
+
+            if ($father->gender !== 'male') {
+                throw new BadRequestHttpException(null, [
+                    'father_ids' => "Отец с id=$id должен быть мужского пола.",
                 ]);
             }
         }
@@ -153,8 +159,9 @@ final readonly class CatKinshipPolicy
      * цикл (испорченные данные), метод не зациклится, а вернёт то, что успел
      * собрать. Это делает его безопасным для вызова на «грязных» данных.
      *
+     * @param array<int> $fatherIds
      * @return array<int, true> карта id => true
-     */
+    */
     private function collectAncestorIds(?int $motherId, array $fatherIds): array
     {
         // array_filter убирает null, если мать не указана.

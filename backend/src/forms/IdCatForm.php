@@ -8,14 +8,8 @@ use yii\web\NotFoundHttpException;
 
 final class IdCatForm extends AbstractForm
 {
+    /** @var ?mixed $id */
     public $id;
-
-    public function __construct(
-        private readonly CatRegistryRepositoryInterface $catRegistryRepository,
-        $config = [],
-    ) {
-        parent::__construct($config);
-    }
 
     public function rules(): array
     {

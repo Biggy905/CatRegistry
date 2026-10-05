@@ -7,9 +7,13 @@ use CatRegistry\applications\enums\CatGenderEnums;
 
 final class FilterCatForm extends AbstractForm
 {
+    /** @var ?mixed $page */
     public $page;
+    /** @var ?mixed $limit */
     public $limit;
+    /** @var ?mixed $age */
     public $age;
+    /** @var ?mixed $gender */
     public $gender;
 
     public function rules(): array
@@ -46,18 +50,16 @@ final class FilterCatForm extends AbstractForm
             return;
         }
 
-        if (is_array($this->age)) {
-            $count = count($this->age);
-            if ($count !== 2) {
+        $count = count($this->age);
+        if ($count !== 2) {
+            $this->addError('age', 'Должны быть минимальные и максимальные числа.');
+            return;
+        }
+
+        foreach ($this->age as $value) {
+            if (!is_numeric($value) || (int) $value != $value) {
                 $this->addError('age', 'Должны быть минимальные и максимальные числа.');
                 return;
-            }
-
-            foreach ($this->age as $value) {
-                if (!is_numeric($value) || (int) $value != $value) {
-                    $this->addError('age', 'Должны быть минимальные и максимальные числа.');
-                    return;
-                }
             }
         }
     }

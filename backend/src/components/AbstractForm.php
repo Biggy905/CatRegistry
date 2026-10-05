@@ -2,9 +2,13 @@
 
 namespace CatRegistry\applications\components;
 
+use yii\base\DynamicModel;
 use yii\validators\Validator;
 
-abstract class AbstractForm extends \yii\base\Model
+/**
+ *
+ */
+abstract class AbstractForm extends DynamicModel
 {
     protected static string $formName = '';
 
@@ -13,12 +17,20 @@ abstract class AbstractForm extends \yii\base\Model
         return static::$formName;
     }
 
+    /**
+     * @param mixed $request
+     * @param mixed|null $attributes
+     * @param mixed|null $validator
+     * @param ?array<mixed> $options
+     * @return bool
+     */
     public function runValidate(
-        array $request,
-              $attributes = null,
-              $validator = null,
+        mixed $request,
+        mixed $attributes = null,
+        mixed $validator = null,
         ?array $options = null,
     ): bool {
+        /** @var array<mixed> $request*/
         $this->load($request);
 
         if (
@@ -26,12 +38,16 @@ abstract class AbstractForm extends \yii\base\Model
             && $validator instanceof Validator
             && isset($options)
         ) {
+            /** @var array<mixed>|string $attributes */
             $this->addRule($attributes, $validator, $options);
         }
 
         return $this->validate();
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getDataErrors(): array
     {
         $data = [];

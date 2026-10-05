@@ -4,7 +4,6 @@ namespace CatRegistry\applications\entities;
 
 use CatRegistry\applications\components\AbstractModel;
 use CatRegistry\applications\queries\CatMaleQuery;
-use CatRegistry\applications\queries\CatRegistryQuery;
 
 /**
  * @property int $id
@@ -20,10 +19,12 @@ final class CatMale extends AbstractModel
         return (new CatMaleQuery(get_called_class()));
     }
 
-    public function getCats(): \yii\db\ActiveQuery
+    /**
+     * @return \yii\db\ActiveQuery<CatRegistry>
+     */
+    public function getChildren(): \yii\db\ActiveQuery
     {
-        return $this->hasOne(self::class, ['id' => 'mother_id']);
+        return $this->hasMany(CatRegistry::class, ['id' => 'cat_id'])
+            ->viaTable(CatMale::tableName(), ['father_id' => 'id']);
     }
-
-
 }

@@ -9,7 +9,7 @@ use yii\db\Exception;
 interface CatRegistryRepositoryInterface
 {
     /**
-     * @return array<int, mixed>
+     * @return array<int, CatRegistry>
      */
     public function findAll(FilterCatForm $form): array;
 
@@ -22,8 +22,14 @@ interface CatRegistryRepositoryInterface
 
     public function delete(CatRegistry $catRegistry): void;
 
-    public function findId(int $id): CatRegistry;
+    public function findId(int $id): ?CatRegistry;
 
+    /**
+     * @param int $id
+     * @param string $name
+     * @param string $gender
+     * @return CatRegistry[]
+     */
     public function findByNameAndGender(
         int $id,
         string $name,

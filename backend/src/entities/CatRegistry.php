@@ -22,19 +22,27 @@ final class CatRegistry extends AbstractModel
 {
     public static string $tableName = 'cat_registries';
 
+    /**
+     * @return CatRegistryQuery
+     */
     public static function find(): CatRegistryQuery
     {
         return new CatRegistryQuery(get_called_class())
             ->andWhere([ CatRegistry::tableName() . '.deleted_at' => null]);
     }
 
+    /**
+     * @return \yii\db\ActiveQuery<CatRegistry>
+     */
     public function getMother(): \yii\db\ActiveQuery
     {
         return $this
             ->hasOne(CatRegistry::class, ['id' => 'mother_id']);
-            //->from(['parent' => CatRegistry::tableName()]);
     }
 
+    /**
+     * @return \yii\db\ActiveQuery<CatRegistry>
+     */
     public function getFathers(): \yii\db\ActiveQuery
     {
         return $this->hasMany(self::class, ['id' => 'father_id'])

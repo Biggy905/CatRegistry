@@ -13,7 +13,7 @@ class m260930_212534_create_table_cat_registries extends Migration
         $this->tableName = \CatRegistry\applications\entities\CatRegistry::tableName();
     }
 
-    public function up(): void
+    public function up()
     {
         $this->createTable(
             $this->tableName,
@@ -33,7 +33,7 @@ class m260930_212534_create_table_cat_registries extends Migration
         $this->createIndex('idx-cat-age', $this->tableName, 'age');
     }
 
-    public function down(): void
+    public function down()
     {
         $this->dropIndex('idx-cat-gender', $this->tableName);
         $this->dropIndex('idx-cat-age', $this->tableName);

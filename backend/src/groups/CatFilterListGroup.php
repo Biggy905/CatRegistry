@@ -3,9 +3,13 @@
 namespace CatRegistry\applications\groups;
 
 use CatRegistry\applications\components\GroupInterface;
+use CatRegistry\applications\entities\CatRegistry;
 
 final class CatFilterListGroup implements GroupInterface
 {
+    /**
+     * @param CatRegistry[] $catRegistries
+     */
     public function __construct(
         public array $catRegistries
     ) {
