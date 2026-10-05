@@ -56,8 +56,8 @@ function onFiltersReset() {
       </RouterLink>
     </div>
 
-    <div v-else class="row g-3">
-      <div v-for="cat in items" :key="cat.id" class="col-md-6 col-lg-4">
+    <div v-else class="row g-3 justify-content-md-around">
+      <div v-for="cat in items" :key="cat.id" class="col-md-6 col-lg-3">
         <CatCard :cat="cat" />
       </div>
     </div>
