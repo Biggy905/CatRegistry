@@ -13,9 +13,7 @@ use CatRegistry\applications\groups\CatSelectItemGroup;
 use CatRegistry\applications\groups\SearchCatListGroup;
 use CatRegistry\applications\policies\CatKinshipPolicy;
 use CatRegistry\applications\repositories\CatRegistryRepositoryInterface;
-use yii\db\Connection;
 use yii\db\Exception;
-use yii\web\Application;
 use yii\web\BadRequestHttpException;
 use yii\web\NotFoundHttpException;
 use Yii;
@@ -38,7 +36,9 @@ final readonly class CatRegistryServices
      */
     public function item(IdCatForm $form): array
     {
-        $catRegistry = $this->catRegistryRepository->findId($form->id);
+        /** @var int $id */
+        $id = $form->id;
+        $catRegistry = $this->catRegistryRepository->findId($id);
         if (empty($catRegistry)) {
             throw new NotFoundHttpException('Запись не найдена');
         }
@@ -73,12 +73,18 @@ final readonly class CatRegistryServices
      */
     public function search(SearchCatForm $form): array
     {
+        /** @var int $excludedCatId */
+        $excludedCatId = $form->exclude_cat_id;
+        /** @var string $name */
+        $name = $form->name;
+        /** @var string $gender */
+        $gender = $form->gender;
         return [
             'items' => new SearchCatListGroup(
                 $this->catRegistryRepository->findByNameAndGender(
-                    id: $form->exclude_cat_id,
-                    name: $form->name,
-                    gender: $form->gender,
+                    id: $excludedCatId,
+                    name: $name,
+                    gender: $gender,
                 )
             )->toArray(),
         ];
@@ -94,24 +100,35 @@ final readonly class CatRegistryServices
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            /** @var string $name */
+            $name = $form->name;
+            /** @var int $age */
+            $age = $form->age;
+            /** @var string $gender */
+            $gender = $form->gender;
+            /** @var ?int $motherId */
+            $motherId = $form->mother_id ?? null;
+            /** @var array<int> $fatherIds */
+            $fatherIds = $form->father_ids ?? [];
+
             $this->catKinshipPolicy->ensureCanAssignParents(
                 catId: null,
-                motherId: $form->mother_id,
-                fatherIds: $form->father_ids ?? []
+                motherId: $motherId,
+                fatherIds: $fatherIds
             );
 
             $catRegistry = new CatRegistry();
-            $catRegistry->name = $form->name;
-            $catRegistry->age = $form->age;
-            $catRegistry->gender = $form->gender;
-            $catRegistry->mother_id = $form->mother_id ?? null;
+            $catRegistry->name = $name;
+            $catRegistry->age = $age;
+            $catRegistry->gender = $gender;
+            $catRegistry->mother_id = $motherId;
             $catRegistry->created_at = (new DateTimeImmutable())->format('Y-m-d H:i:s');
 
             $this->catRegistryRepository->create($catRegistry);
-            if (!empty($form->father_ids) && is_array($form->father_ids)) {
+            if (!empty($fatherIds)) {
                 /** @var CatRegistry[] $fathers */
                 $fathers = CatRegistry::find()
-                    ->where(['id' => $form->father_ids])
+                    ->where(['id' => $fatherIds])
                     ->all();
 
                 foreach ($fathers as $father) {
@@ -133,30 +150,43 @@ final readonly class CatRegistryServices
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
+            /** @var int $catId */
+            $catId = $form->id;
+            /** @var string $name */
+            $name = $form->name;
+            /** @var int $age */
+            $age = $form->age;
+            /** @var string $gender */
+            $gender = $form->gender;
+            /** @var ?int $motherId */
+            $motherId = $form->mother_id ?? null;
+            /** @var array<int> $fatherIds */
+            $fatherIds = $form->father_ids ?? [];
+
             $this->catKinshipPolicy->ensureCanAssignParents(
-                catId: $form->id,
-                motherId: $form->mother_id,
-                fatherIds: $form->father_ids ?? [],
+                catId: $catId,
+                motherId: $motherId,
+                fatherIds: $fatherIds
             );
 
-            $catRegistry = $this->catRegistryRepository->findId($form->id);
+            $catRegistry = $this->catRegistryRepository->findId($catId);
             if ($catRegistry === null) {
                 throw new NotFoundHttpException('Запись не найдена');
             }
 
-            $catRegistry->name = $form->name;
-            $catRegistry->age = $form->age;
-            $catRegistry->gender = $form->gender;
-            $catRegistry->mother_id = $form->mother_id ?? null;
+            $catRegistry->name = $name;
+            $catRegistry->age = $age;
+            $catRegistry->gender = $gender;
+            $catRegistry->mother_id = $motherId;
             $catRegistry->updated_at = (new DateTimeImmutable())->format('Y-m-d H:i:s');
 
             $this->catRegistryRepository->update($catRegistry);
 
             $catRegistry->unlinkAll('fathers', true);
-            if (!empty($form->father_ids) && is_array($form->father_ids)) {
+            if (!empty($fatherIds)) {
                 /** @var CatRegistry[] $fathers */
                 $fathers = CatRegistry::find()
-                    ->where(['id' => $form->father_ids])
+                    ->where(['id' => $fatherIds])
                     ->all();
 
                 foreach ($fathers as $father) {
@@ -178,7 +208,10 @@ final readonly class CatRegistryServices
     {
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            $catRegistry = $this->catRegistryRepository->findId($form->id);
+            /** @var int $catId */
+            $catId = $form->id;
+
+            $catRegistry = $this->catRegistryRepository->findId($catId);
             if ($catRegistry === null) {
                 throw new NotFoundHttpException('Запись не найдена');
             }

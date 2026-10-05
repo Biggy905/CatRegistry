@@ -58,15 +58,19 @@ final readonly class CatKinshipPolicy
         }
 
         if ($motherId === $catId) {
-            throw new BadRequestHttpException(null, [
-                'mother_id' => 'Кошка не может быть своей матерью.',
-            ]);
+            throw new BadRequestHttpException(
+                data: [
+                    'mother_id' => 'Кошка не может быть своей матерью.',
+                ]
+            );
         }
 
         if (in_array($catId, $fatherIds, true)) {
-            throw new BadRequestHttpException(null, [
-                'father_ids' => 'Кошка не может быть своим отцом.',
-            ]);
+            throw new BadRequestHttpException(
+                data: [
+                    'father_ids' => 'Кошка не может быть своим отцом.',
+                ]
+            );
         }
     }
 
@@ -86,9 +90,11 @@ final readonly class CatKinshipPolicy
 
         $mother = $this->repository->findId($motherId);
         if ($mother === null || $mother->gender !== 'female') {
-            throw new BadRequestHttpException(null, [
-                'mother_id' => 'Мать должна быть женского пола.',
-            ]);
+            throw new BadRequestHttpException(
+                data: [
+                    'mother_id' => 'Мать должна быть женского пола.',
+                ]
+            );
         }
     }
 
@@ -104,15 +110,19 @@ final readonly class CatKinshipPolicy
         foreach ($fatherIds as $id) {
             $father = $this->repository->findId($id);
             if ($father === null) {
-                throw new BadRequestHttpException(null, [
-                    'father_ids' => "Отец с id=$id не найден .",
-                ]);
+                throw new BadRequestHttpException(
+                    data: [
+                        'father_ids' => "Отец с id=$id не найден .",
+                    ]
+                );
             }
 
             if ($father->gender !== 'male') {
-                throw new BadRequestHttpException(null, [
-                    'father_ids' => "Отец с id=$id должен быть мужского пола.",
-                ]);
+                throw new BadRequestHttpException(
+                    data: [
+                        'father_ids' => "Отец с id=$id должен быть мужского пола.",
+                    ]
+                );
             }
         }
     }
@@ -144,8 +154,7 @@ final readonly class CatKinshipPolicy
 
         if (isset($ancestors[$catId])) {
             throw new BadRequestHttpException(
-                null,
-                [
+                data: [
                     'mother_id' => 'Циклическая связь: кошка не может быть своим предком.',
                 ]
             );

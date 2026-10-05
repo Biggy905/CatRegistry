@@ -42,7 +42,7 @@ final class CatController extends RestController
     {
         $form = $this->idCatForm;
         if (!$form->runValidate(['id' => $id])) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         return $this->responseOK(
@@ -63,7 +63,7 @@ final class CatController extends RestController
         if (!$form->runValidate(
             ['exclude_cat_id' => $exclude_cat_id,'name' => $name, 'gender' => $gender])
         ) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         return $this->responseOK(
@@ -91,7 +91,7 @@ final class CatController extends RestController
                 'gender' => $request->get('gender'),
             ]
         )) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         return $this->responseOK(
@@ -112,7 +112,7 @@ final class CatController extends RestController
         $payload = $this->getPayload();
         $form = $this->createCatForm;
         if (!$form->runValidate($payload)) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         $cat = $this->services->insert($form);
@@ -138,7 +138,7 @@ final class CatController extends RestController
         if (!$form->runValidate(
             array_merge($payload, ['id' => $id])
         )) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         return $this->responseOK(
@@ -157,7 +157,7 @@ final class CatController extends RestController
     {
         $form = $this->idCatForm;
         if (!$form->runValidate(['id' => $id])) {
-            throw new BadRequestHttpException(data: $form->getErrors());
+            throw new BadRequestHttpException(data: $form->getDataErrors());
         }
 
         $this->services->delete($form);

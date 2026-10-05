@@ -7,12 +7,12 @@ use Throwable;
 final class BadRequestHttpException extends \yii\web\BadRequestHttpException
 {
     /**
-     * @var array<string, string[]>
+     * @var array<string, string>
      */
     private $data;
 
     /**
-     * @param array<string, string[]> $data
+     * @param array<string, string> $data
      */
     public function __construct(
         array $data = [],
@@ -25,7 +25,7 @@ final class BadRequestHttpException extends \yii\web\BadRequestHttpException
     }
 
     /**
-     * @return array<string, string[]>
+     * @return array<string, string>
      */
     public function getData(): array
     {
